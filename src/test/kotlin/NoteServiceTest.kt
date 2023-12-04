@@ -4,7 +4,7 @@ import org.junit.Assert.*
 import org.junit.Before
 
 class NoteServiceTest {
-    val service = NoteService
+    private val service = NoteService
 
     @Before
     fun clearBeforeTest() {
@@ -13,39 +13,43 @@ class NoteServiceTest {
 
     //    проверка добавления заметки
     @Test
-    fun add() {
-        service.add(Note(title = "Note1", text = "Текст заметки 1"))
-        val nid = service.add(
+    fun addNote() {
+        service.addNote(Note(title = "Note1", text = "Текст заметки 1"))
+        val note = service.addNote(
             Note(title = "Note2", text = "Текст заметки 2")
         )
-        assertEquals(2, nid)
+        assertEquals(2, note.id)
     }
 
     //    проверка успешного удаления заметки
     @Test
-    fun deleteTrue() {
-        val nid = service.add(Note(title = "Note1", text = "Текст заметки 1"))
-        service.add(Note(title = "Note2", text = "Текст заметки 2"))
-        val result = service.delete(nid)
+    fun deleteNoteTrue() {
+        val note = service.addNote(Note(title = "Note1", text = "Текст заметки 1"))
+        service.addNote(Note(title = "Note2", text = "Текст заметки 2"))
+        val comment = service.createComment(1, Comment(message = "Комментарий к заметке Note 1"))
+
+        val result = service.deleteNote(note.id)
+
         assertTrue(result)
+        assertTrue(service.getComments(noteId = note.id)[0].isDeleted)
     }
 
     //    проверка неуспешного удаления заметки
     @Test
-    fun deleteFalse() {
-        service.add(Note(title = "Note1", text = "Текст заметки 1"))
-        val result = service.delete(3)
+    fun deleteNoteFalse() {
+        service.addNote(Note(title = "Note1", text = "Текст заметки 1"))
+        val result = service.deleteNote(3)
         assertFalse(result)
     }
 
     //    проверка успешного обновления замети
     @Test
-    fun updateIsTrue() {
-        service.add(Note(title = "Note1", text = "Текст заметки 1"))
-        service.add(Note(title = "Note2", text = "Текст заметки 2"))
+    fun updateNoteIsTrue() {
+        service.addNote(Note(title = "Note1", text = "Текст заметки 1"))
+        service.addNote(Note(title = "Note2", text = "Текст заметки 2"))
 
-        val updateNote = Note(nid = 2, title = "Note3", text = "Текст заметки 3")
-        val result = service.update(updateNote)
+        val updateNote = Note(id = 2, title = "Note3", text = "Текст заметки 3")
+        val result = service.updateNote(updateNote)
 
         assertTrue( result )
 
@@ -53,15 +57,138 @@ class NoteServiceTest {
 
     //    проверка неуспешного обновления замети
     @Test
-    fun updateIsFalse() {
-        service.add(Note(title = "Note1", text = "Текст заметки 1"))
-        service.add(Note(title = "Note2", text = "Текст заметки 2"))
+    fun updateNoteIsFalse() {
+        service.addNote(Note(title = "Note1", text = "Текст заметки 1"))
+        service.addNote(Note(title = "Note2", text = "Текст заметки 2"))
 
-        val updateNote = Note(nid = 3, title = "Note3", text = "Текст заметки 3")
-        val result = service.update(updateNote)
+        val updateNote = Note(id = 3, title = "Note3", text = "Текст заметки 3")
+        val result = service.updateNote(updateNote)
 
         assertFalse(result)
 
     }
 
+    //    проверка успешного получения замети по id
+    @Test
+    fun getNoteByIdIsTrue() {
+        val note1 = service.addNote(Note(title = "Note1", text = "Текст заметки 1"))
+        service.addNote(Note(title = "Note2", text = "Текст заметки 2"))
+
+        val result = service.getNoteById(1)
+
+        assertEquals( result, note1 )
+
+    }
+
+    @Test
+    fun getNotes() {
+        service.addNote(Note(title = "Note1", text = "Текст заметки 1"))
+        service.addNote(Note(title = "Note2", text = "Текст заметки 2"))
+
+        val result = service.getNotes().size
+
+        assertEquals(2, result)
+    }
+
+    //    проверка неуспешного получения замети по id
+    @Test
+    fun getNoteByIdIsFalse() {
+        val note1 = service.addNote(Note(title = "Note1", text = "Текст заметки 1"))
+        service.addNote(Note(title = "Note2", text = "Текст заметки 2"))
+
+        val result = service.getNoteById(3)
+
+        assertNull(result)
+
+    }
+
+    //  тест добавления комментария
+    @Test
+    fun createComment() {
+        service.addNote(Note(title = "Note1", text = "Текст заметки 1"))
+        val comment = service.createComment(1, Comment(message = "Комментарий к заметке Note 1"))
+
+        assertEquals(Pair(1, 1), Pair(comment.guid, comment.noteId))
+    }
+
+    // тест успешного удаления комментария
+    @Test
+    fun deleteCommentTrue() {
+        service.addNote(Note(title = "Note1", text = "Текст заметки 1"))
+        val comment = service.createComment(1, Comment(message = "Комментарий к заметке Note 1"))
+
+        val result = service.deleteComment(comment.guid)
+
+        assertTrue(result)
+    }
+
+    // тест удаления несуществующего комментария
+    @Test
+    fun deleteCommentFalse() {
+        service.addNote(Note(title = "Note1", text = "Текст заметки 1"))
+        val comment = service.createComment(1, Comment(message = "Комментарий к заметке Note 1"))
+
+        val result = service.deleteComment(comment.guid + 1)
+
+        assertFalse(result)
+    }
+
+    // тест удаления уже удаленного комментария
+    @Test
+    fun deleteCommentIsDeleted() {
+        service.addNote(Note(title = "Note1", text = "Текст заметки 1"))
+        val comment = service.createComment(1, Comment(message = "Комментарий к заметке Note 1"))
+        service.deleteComment(comment.guid)
+
+        val result = service.deleteComment(comment.guid)
+
+        assertFalse(result)
+    }
+
+    // тест успешного изменения комментария
+    @Test
+    fun updateCommentTrue() {
+        service.addNote(Note(title = "Note1", text = "Текст заметки 1"))
+        val comment = service.createComment(1, Comment(message = "Комментарий к заметке Note 1"))
+
+        val result = service.updateComment(Comment(guid = 1, noteId = 1, "Измененный комментарий"))
+
+        assertTrue(result)
+    }
+
+    // тест неуспешного изменения комментария
+    @Test
+    fun updateCommentFalse() {
+        val note = service.addNote(Note(title = "Note1", text = "Текст заметки 1"))
+        val comment = service.createComment(note.id, Comment(message = "Комментарий к заметке Note 1"))
+
+        val result = service.updateComment(
+            Comment(guid = comment.guid + 1, noteId = note.id, "Измененный комментарий")
+        )
+
+        assertFalse(result)
+    }
+
+    // тест неуспешного изменения удаленного комментария
+    @Test
+    fun updateCommentIsDeleted() {
+        service.addNote(Note(title = "Note1", text = "Текст заметки 1"))
+        val comment = service.createComment(1, Comment(message = "Комментарий к заметке Note 1"))
+        service.deleteComment(comment.guid)
+
+        val result = service.updateComment(Comment(guid = 1, noteId = 1, "Измененный комментарий"))
+
+        assertFalse(result)
+    }
+
+    @Test
+    fun getComments() {
+        val note = service.addNote(Note(title = "Note1", text = "Текст заметки 1"))
+        service.createComment(note.id, Comment(message = "Комментарий к заметке Note 1"))
+        service.createComment(note.id, Comment(message = "Еще комментарий к заметке Note 1"))
+
+        val result = service.getComments(note.id).size
+
+        assertEquals(2, result)
+    }
 }
