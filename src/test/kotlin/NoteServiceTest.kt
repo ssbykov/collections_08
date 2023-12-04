@@ -26,7 +26,7 @@ class NoteServiceTest {
     fun deleteNoteTrue() {
         val note = service.addNote(Note(title = "Note1", text = "Текст заметки 1"))
         service.addNote(Note(title = "Note2", text = "Текст заметки 2"))
-        val comment = service.createComment(1, Comment(message = "Комментарий к заметке Note 1"))
+        service.createComment(1, Comment(message = "Комментарий к заметке Note 1"))
 
         val result = service.deleteNote(note.id)
 
@@ -93,10 +93,10 @@ class NoteServiceTest {
     //    проверка неуспешного получения замети по id
     @Test
     fun getNoteByIdIsFalse() {
-        val note1 = service.addNote(Note(title = "Note1", text = "Текст заметки 1"))
-        service.addNote(Note(title = "Note2", text = "Текст заметки 2"))
+        service.addNote(Note(title = "Note1", text = "Текст заметки 1"))
+        val note = service.addNote(Note(title = "Note2", text = "Текст заметки 2"))
 
-        val result = service.getNoteById(3)
+        val result = service.getNoteById(note.id + 1)
 
         assertNull(result)
 
@@ -148,10 +148,12 @@ class NoteServiceTest {
     // тест успешного изменения комментария
     @Test
     fun updateCommentTrue() {
-        service.addNote(Note(title = "Note1", text = "Текст заметки 1"))
+        val note = service.addNote(Note(title = "Note1", text = "Текст заметки 1"))
         val comment = service.createComment(1, Comment(message = "Комментарий к заметке Note 1"))
 
-        val result = service.updateComment(Comment(guid = 1, noteId = 1, "Измененный комментарий"))
+        val result = service.updateComment(
+            Comment(guid = comment.guid, noteId = note.id, "Измененный комментарий")
+        )
 
         assertTrue(result)
     }
