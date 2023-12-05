@@ -13,8 +13,8 @@ object NoteService {
 
     // метод удаления заметки с удалением всех комментариев
     fun deleteNote(id: Int): Boolean {
-        return notes.find { it.id == id }?.let { note ->
-            notes[notes.indexOf(note)] = note.copy(isDelete = true)
+        return notes.find { it.id == id && !it.isDeleted}?.let { note ->
+            notes[notes.indexOf(note)] = note.copy(isDeleted = true)
             comments.filter { it.noteId == id }.forEach {
                 deleteComment(it.guid)
             }
@@ -24,7 +24,7 @@ object NoteService {
 
     //    метод изменения заметки
     fun updateNote(note: Note): Boolean {
-        return notes.find { it.id == note.id }?.let { findNote ->
+        return notes.find { it.id == note.id  && !it.isDeleted }?.let { findNote ->
             notes[notes.indexOf(findNote)] = note.copy()
             true
         } ?: false
@@ -32,12 +32,12 @@ object NoteService {
 
     // метод получения заметки по id
     fun getNoteById(id: Int): Note? {
-        return notes.find { it.id == id }
+        return notes.find { it.id == id && !it.isDeleted }
     }
 
     // метод получения всех заметок
     fun getNotes(): List<Note> {
-        return notes
+        return notes.filter { !it.isDeleted }
     }
 
     // добавление комментария к заметке с заданным id
@@ -64,8 +64,10 @@ object NoteService {
 
     //    метод получения всех комментариев
     fun getComments(noteId: Int): List<Comment> {
-        return comments.filter { it.noteId == noteId }
+        return comments.filter { it.noteId == noteId && !it.isDeleted }
     }
+
+
 
     //    метод очистки данных
     fun clear() {

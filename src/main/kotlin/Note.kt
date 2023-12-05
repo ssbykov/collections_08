@@ -4,7 +4,7 @@ data class Note(
     val text: String,
     val privacy: Int = 0,
     val commentPrivacy: Int = 0,
-    val isDelete: Boolean = false
+    val isDeleted: Boolean = false
 
 
 )
