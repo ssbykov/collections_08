@@ -13,7 +13,7 @@ object NoteService {
 
     // метод удаления заметки с удалением всех комментариев
     fun deleteNote(id: Int): Boolean {
-        return notes.find { it.id == id && !it.isDeleted}?.let { note ->
+        return notes.find { it.id == id && !it.isDeleted }?.let { note ->
             notes[notes.indexOf(note)] = note.copy(isDeleted = true)
             comments.filter { it.noteId == id }.forEach {
                 deleteComment(it.guid)
@@ -24,7 +24,7 @@ object NoteService {
 
     //    метод изменения заметки
     fun updateNote(note: Note): Boolean {
-        return notes.find { it.id == note.id  && !it.isDeleted }?.let { findNote ->
+        return notes.find { it.id == note.id && !it.isDeleted }?.let { findNote ->
             notes[notes.indexOf(findNote)] = note.copy()
             true
         } ?: false
@@ -67,7 +67,16 @@ object NoteService {
         return comments.filter { it.noteId == noteId && !it.isDeleted }
     }
 
-
+    //  метод восстановления удаленного комментария
+    fun restoreComment(guid: Int): Boolean {
+        return comments.find {
+            val note = getNoteById(it.noteId)
+            it.guid == guid && it.isDeleted && note != null && !note.isDeleted
+        }?.let { findComment ->
+            comments[comments.indexOf(findComment)] = findComment.copy(isDeleted = false)
+            true
+        } ?: false
+    }
 
     //    метод очистки данных
     fun clear() {

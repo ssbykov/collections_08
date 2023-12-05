@@ -224,6 +224,7 @@ class NoteServiceTest {
         assertFalse(result)
     }
 
+    // тест получения комментариев к заметке
     @Test
     fun getComments() {
         val note = service.addNote(Note(title = "Note1", text = "Текст заметки 1"))
@@ -235,4 +236,57 @@ class NoteServiceTest {
 
         assertEquals(1, result)
     }
+
+    // тест успешного восстановления удаленного комментария
+    @Test
+    fun restoreComment() {
+        val note = service.addNote(Note(title = "Note1", text = "Текст заметки 1"))
+        val comment = service.createComment(note.id, Comment(message = "Комментарий к заметке Note 1"))
+        service.createComment(note.id, Comment(message = "Еще комментарий к заметке Note 1"))
+        service.deleteComment(comment.guid)
+        val result = service.restoreComment(comment.guid)
+
+        assertTrue(result)
+        assertFalse(comment.isDeleted)
+
+    }
+
+    // тест неуспешного восстановления несуществующего комментария
+    @Test
+    fun restoreCommentFalse() {
+        val note = service.addNote(Note(title = "Note1", text = "Текст заметки 1"))
+        val comment = service.createComment(note.id, Comment(message = "Комментарий к заметке Note 1"))
+
+        val result = service.restoreComment(comment.guid + 1)
+
+        assertFalse(result)
+
+    }
+
+    // тест восстановления неудаленного комментария
+    @Test
+    fun restoreCommentIsNotDeleted() {
+        val note = service.addNote(Note(title = "Note1", text = "Текст заметки 1"))
+        val comment = service.createComment(note.id, Comment(message = "Комментарий к заметке Note 1"))
+
+        val result = service.restoreComment(comment.guid)
+
+        assertFalse(result)
+        assertFalse(comment.isDeleted)
+
+    }
+
+    // тест восстановления комментария к удаленной заметке
+    @Test
+    fun restoreCommentNoteIsDeleted() {
+        val note = service.addNote(Note(title = "Note1", text = "Текст заметки 1"))
+        val comment = service.createComment(note.id, Comment(message = "Комментарий к заметке Note 1"))
+        service.deleteNote(note.id)
+
+        val result = service.restoreComment(comment.guid)
+
+        assertFalse(result)
+
+    }
+
 }
